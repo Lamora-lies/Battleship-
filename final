@@ -1,0 +1,320 @@
+//program for playing battleship
+//Will Moynihan
+// Elizabeth Dyer
+// CSC 160
+using namespace std; 
+#include <iostream>
+#include <iomanip>
+#include "windows.h" 
+const int ARRAYSIZE = 64;
+// all variables formatted shipNumber are variables holding the size of the available ships
+const int shipOne = 5; 
+const int shipTwo = 4; // this variable is used twice for ship placement
+const int shipThree = 3;
+int shipCount = 0; //counts number of "S"s in the array, used to check if the game is over
+int hitCount = 0; //counts the number of hits the player has accumulated
+
+
+void showBoard(char myArray[], char letterArray[])//function to output the board that the player sees. 
+{
+	cout << "\n";
+	cout << "     ";
+	/*
+	each for loop outputs a an 8 character chunk of the boardArray
+	*/
+	for (int k = 0; k < 8; k++) //outputs the letter array
+	{
+		cout << letterArray[k] << setw(5);
+	}
+	cout << "\n"; cout << "\n";
+	cout << "0" << setw(5);
+	/*
+	each for loop outputs a an 8 character chunk of the boardArray. It's setup like this for the sake of neatness in
+	the board. It creates an 8x8 grid instead of a single line
+	*/
+	for (int i = 0; i < 8; i++)
+{
+	cout << myArray[i] << setw(5);
+}
+
+cout << "\n"; cout << "\n";
+cout << "1" << setw(5);
+for (int i = 8; i < 16; i++)
+{
+	cout << myArray[i] << setw(5);
+}
+cout << "\n"; cout << "\n";
+cout << "2" << setw(5);
+for (int i = 16; i < 24; i++)
+{
+	cout << myArray[i] << setw(5);
+}
+cout << "\n"; cout << "\n";
+cout << "3" << setw(5);
+for (int i = 24; i < 32; i++)
+{
+	cout << myArray[i] << setw(5);
+}
+cout << "\n"; cout << "\n";
+cout << "4" << setw(5);
+for (int i = 32; i < 40; i++)
+{
+	cout << myArray[i] << setw(5);
+}
+cout << "\n"; cout << "\n";
+cout << "5" << setw(5);
+for (int i = 40; i < 48; i++)
+{
+	cout << myArray[i] << setw(5);
+}
+cout << "\n"; cout << "\n";
+cout << "6" << setw(5);
+for (int i = 48; i < 56; i++)
+{
+	cout << myArray[i] << setw(5);
+}
+cout << "\n"; cout << "\n";
+cout << "7" << setw(5);
+for (int i = 56; i < 64; i++)
+{
+	cout << myArray[i] << setw(5);
+}
+cout << "\n";
+}
+void hitCheckRepeat(char hitArray[], int hitCheck)
+// function to check if coordinates have already been entered, and to take new coordinates if so
+{
+	if (hitArray[hitCheck] == 'X' || hitArray[hitCheck] == 'M')
+	{
+		cout << "You've already entered this coordinate! It was a ";
+		if (hitArray[hitCheck] == 'X')
+		{
+			cout << "hit!\n";
+		}
+		else
+		{
+			cout << "miss! \n";
+		}
+		
+
+	}
+	
+}
+char hitCheckChar(char letCoor) //checks if a legal character has been entered, and takes a new one if not
+{
+
+	while (letCoor != 'a' && letCoor != 'b' && letCoor != 'c' && letCoor != 'd' && letCoor != 'e' &&
+		letCoor != 'f' && letCoor != 'g' && letCoor != 'h')
+	{
+		cout << "Illegal letter coordinate. Please re-enter letter coordinate: ";
+		cin >> letCoor;
+		return letCoor;
+	}
+	return letCoor;
+}
+
+int hitCheckNum(int numCoor) //checks to see if a legal number has been entered, and takes a new number if not
+{
+	while (numCoor > 8 || numCoor < 0)
+	{
+		cout << "Illegal numeric entry. Please try again: ";
+		cin >> numCoor;
+		return numCoor;
+	}
+	return numCoor;
+}
+
+
+char enterLetterCoordinate() //function takes a user entered letter as part of a hit coordinate
+{
+	char letCoor = 'z'; //user entered coordinate corresponding to a location in hitArray
+	cout << "Please enter a lowercase letter coordinate between a and h: ";
+	cin >> letCoor;
+	letCoor = hitCheckChar(letCoor);
+	return letCoor;
+}
+int enterNumberCoordinate() //function takes a user entered number as part of a hit coordinate
+{
+	int numberCoor = -1; //user entered number coordinate corresponding to a location in hitArray
+	cout << "Please enter a number between 0 and 7: ";
+	cin >> numberCoor;
+	numberCoor = hitCheckNum(numberCoor);
+	return numberCoor;
+
+}
+
+int genRand()//function generates a random number between 8 and 64.
+{
+	
+	srand(time(NULL)); //sets the seed for rand as the current system time
+	int test = rand() % 64 + 1;//create int test and assign it the random number value between 1 and 64
+	return test;
+}
+
+int shipCheckLegal(char hitArray[], int coorOne, int shipSize)
+//function used to check if a ship has already been placed in the anticipated location used by placeShip
+{
+	
+	int count = 0; //count tracks the number of overlaps in ship placement
+	for (int i = coorOne; i < shipSize; i++) 
+	{
+		if (hitArray[i] == 'S') 
+		{
+			count++;
+		}
+		//each time the array encounters an S, it increments count
+	}
+	return count;
+}
+void placeShips(char hitArray[], int shipSize)//function used to place ships onto the hit array
+{
+	int coorOne = rand() % 64 + 1; //coordinate used to determining ships starting place in hit array
+		 while (coorOne + shipSize > ARRAYSIZE) 
+		//this loops check if the ship size plus the randomly generated number
+		//assigned to coorOne is greater than the size of the array in order to prevent overrun errors
+		// or a tragic loss of life at sea. 
+	{
+		coorOne = rand() % 64 + 1;
+	}
+	
+	int shipTest = shipCheckLegal(hitArray, coorOne, shipSize);
+	//if shiptest is greater than one, that means that there's already a ship in part of the array that's been slated
+	//for ship placement. The following while loop assigns a new value to coorOne and re checks it until the space is
+	//clear
+	while (shipTest > 0)
+	{
+		coorOne = rand() % 64 + 1;
+		shipCheckLegal(hitArray, coorOne, shipSize);
+	} 
+	
+	for (int i = 0; i < shipSize; i++)//iterates through the array starting at Coordinate one and changing each indice
+		//it goes through to an S to mark a ship placement
+	{
+		hitArray[coorOne] = 'S';
+		coorOne++;
+		shipCount++;
+		
+	}
+}
+
+void hitOrMiss(char showArray[], char hitArray[])
+// function takes user input and determines if a given coordinate is a hit or a miss
+{
+	char letCoor;// player entered letter coordinate
+	int convCoord = 1;// player entered letter coordinate after being translated to an integer value
+	int numCoor; // player entered number coordinate 
+	letCoor = enterLetterCoordinate();
+	hitCheckChar(letCoor);
+	numCoor = enterNumberCoordinate();
+	hitCheckNum(numCoor);
+	// if statements convert a-h into a corresponding 0-7 number value. 
+	if (letCoor == 'a')
+	{
+		convCoord = 0;
+	}
+	else if (letCoor == 'b')
+	{
+		convCoord = 1;
+	}
+	else if (letCoor == 'c')
+	{
+		convCoord = 2;
+	}
+	else if (letCoor == 'd')
+	{
+		convCoord = 3;
+	}
+	else if (letCoor == 'e')
+	{
+		convCoord = 4;
+	}
+	else if (letCoor == 'f')
+	{
+		convCoord = 5;
+	}
+	else if (letCoor == 'g')
+	{
+		convCoord = 6;
+	}
+	else if (letCoor == 'h')
+	{
+		convCoord = 7;
+	}
+	
+	int hitCheck = (numCoor * 8) + convCoord;
+	hitCheckRepeat(hitArray, hitCheck);
+	// hitCheck holds the value that will translate into a location on the array.
+	// the formula is: multiply the given numberic coordinate by 8 which gets you to the correct line
+	// and then add the converted letter value, which gets you to the correct column.
+	if (hitArray[hitCheck] == 'S') 
+		//if the array has an S, which means there's a ship there, it outputs a hit statement and changes the 
+		//hitarray and boardarray to reflect the hit
+
+	{
+		cout << "It's a hit! \n";
+		showArray[hitCheck] = 'X';
+		hitArray[hitCheck] = 'X';
+		hitCount++;
+	}
+	else if (hitArray[hitCheck] != 'H' && hitArray[hitCheck] != 'X') 
+	{
+		//if the array has an H or X, which means there's a ship there, it outputs a miss statement and changes the 
+		//hitarray and boardarray to reflect the miss
+		cout << "It's a miss! \n";
+		hitArray[hitCheck] = 'M';
+		showArray[hitCheck] = 'M';
+	}
+
+	
+}
+
+
+
+int main() 
+{	char boardLet[8] = {'A', 'B', 'C', 'D', 'E', 'F', 'G','H'}; //letter labels array
+	char showArray[64] = //array used as the board display
+	{
+		'*', '*', '*', '*', '*', '*', '*','*',
+		'*', '*', '*', '*', '*', '*', '*','*',
+		'*', '*', '*', '*', '*', '*', '*','*',
+		'*', '*', '*', '*', '*', '*', '*','*',
+		'*', '*', '*', '*', '*', '*', '*','*',
+		'*', '*', '*', '*', '*', '*', '*','*',
+		'*', '*', '*', '*', '*', '*', '*','*',
+		'*', '*', '*', '*', '*', '*', '*','*'
+	};
+	char hitArray[64] = //array used to hold ships and calculate hits and misses
+	{
+		'*', '*', '*', '*', '*', '*', '*','*',
+		'*', '*', '*', '*', '*', '*', '*','*',
+		'*', '*', '*', '*', '*', '*', '*','*',
+		'*', '*', '*', '*', '*', '*', '*','*',
+		'*', '*', '*', '*', '*', '*', '*','*',
+		'*', '*', '*', '*', '*', '*', '*','*',
+		'*', '*', '*', '*', '*', '*', '*','*',
+		'*', '*', '*', '*', '*', '*', '*','*'
+	};
+	
+	char playAgain = 'y'; //variable controls the loop allowing for replay. Set to yes so it always runs at least once
+	while (playAgain == 'y')
+		//outerwhile controls if the player wants to play again, while the inner while actually plays the game.
+	{
+
+		placeShips(hitArray, shipOne);
+		placeShips(hitArray, shipTwo);
+		placeShips(hitArray, shipTwo);
+		placeShips(hitArray, shipThree);
+		cout << endl;
+		while (hitCount < shipCount)
+		{
+			showBoard(showArray, boardLet);
+			cout << "\n";
+			hitOrMiss(showArray, hitArray);
+
+		}
+		cout << "\n Do you want to play again y/n: ";
+			cin >> playAgain;
+	}
+	cout << endl << "Good game and thanks for playing Battleship! \n";
+	system("pause");
+}
